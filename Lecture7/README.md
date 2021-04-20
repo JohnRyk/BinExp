@@ -136,22 +136,7 @@ $ cat /proc/10316/maps/
 
 
 
-`0935f000-09381000` is Virtual address range for this segment,
-`rw-p` is Flags (Read, Write, Non-Xecute, Private)
-`00000000` is File offset – Since its not mapped from any file, its zero here
-`00:00` is Major/Minor device number – Since its not mapped from any file, its zero here
-`0` is inode number – Since its not mapped from any file, its zero here
-
-
-
-我们知道了 `sbrk` 和 `brk` 被用作 get/set 程序的 break 的偏移量。另一方面 `mmap` 是用来从kernel获取内存，然后将它
-
-
-
-
-
-Since `sbrk` and `brk` are used to get/set the offset of program break on the other hand `mmap` is used to get the memory from the kernel to add it to the heap and update the program `brk`.
-The functions that we have discussed so far are able to manage the heap memory. Now we will clear out the picture of `Heap` a bit.
+​	我们已经知道了 `sbrk` 和 `brk` 被用作 get/set 程序的 break 的偏移量。另一方面 `mmap` 是用来从kernel获取内存以将其添加到 heap 并更新程序的 `brk`。到目前为止，我们都是在讨论 heap 的内存管理，现在我们将要更深入地了解 `heap`。
 
 
 
@@ -159,9 +144,7 @@ The functions that we have discussed so far are able to manage the heap memory. 
 
 
 
-`glibc` 中针对 heap 实现了多种不同的内存分配的概念。它可以帮助我们更方便地操纵 heap。这些内存分配相关的概念为：Arenas，Bins，Chunks.
-
-Heap have different allocation units implemented by `glibc` that helps for easy heap manipulation. These different allocation units are Arenas, Bins, Chunks.
+`glibc` 中针对 heap 实现了多种不同的内存分配的单元的概念。它可以帮助我们更方便地操纵 heap。这些内存分配相关的单元为：Arenas，Bins，Chunks.
 
 
 
@@ -199,10 +182,6 @@ They are the collection of free memory allocation units called `chunks`. There a
 
 这四种类型的bins分别是：
 
-The four types of bins are:
-
-
-
  1. **Fast.**
 
 	有 10 个 fast bins。每一个都维护一个单向链表。增加和删除节点的操作都要从链表头开始（LIFO manner）。每一个 bin 都有相同大小的 chunks 。每10个 bins 就对应 16, 24, 32, 40, 48, 56, 64 个 bytes
@@ -226,31 +205,13 @@ The four types of bins are:
 
 
 
-1. **Fast**.
-	There are 10 fast bins. Each of these bins maintains a single linked list. Addition and deletion happen from the front of this list (LIFO manner). Each bin has chunks of the same size. The 10 bins each have chunks of sizes: 16, 24, 32, 40, 48, 56, 64 bytes etc. No two contiguous free fast chunks coalesce together.
-2. **Unsorted**.
-	When small and large chunks are free'd they're initially stored in a this bin. There is only 1 unsorted bins.
-3. **Small**.
-	The normal bins are divided into "small" bins, where each chunk is the same size, and "large" bins, where chunks are a range of sizes. When a chunk is added to these bins, they're first combined with adjacent chunks to "coalesce" them into larger chunks. Thus, these chunks are never adjacent to other such chunks (although they may be adjacent to fast or unsorted chunks, and of course in-use chunks). Small and large chunks are doubly-linked so that chunks may be removed from the middle (such as when they're combined with newly free'd chunks).
-4. **Large**.
-	A chunk is "large" if its bin may contain more than one size. For small bins, you can pick the first chunk and just use it. For large bins, you have to find the "best" chunk, and possibly split it into two chunks (one the size you need, and one for the remainder).
-
-
-
 #### Chunks:
 
-
-
-Chunks 是 bins 中的基本分配单元。heap 中的内存根据不同类型的 bins 分成不同大小的 chunks （这个大小取决于它们是由哪个 bin 分配的）。每一个 chunk 都包含有关其大小的元数据（通过chunk头部的size字段）以及相邻块的位置。当 chunk 被释放后，曾经是应用程序数据的内存将重新用于其他与 arena 相关的信息。就如 链表中的指针 ，以便可以在需要时快速找到并重新使用合适的 chunks 。chunks 的大小始终为8的倍数，这允许将最后三位用作标志位。 
-
-
-Chunks are the fundamental allocation unit in bins. The memory in the heap is divided into chunks of various sizes depends on where they are allocated (in which bin). Each chunk includes meta-data about how big it is (via a size field in the chunk header), and thus where the adjacent chunks are. When the chunk is free'd, the memory that used to be application data is re-purposed for additional arena-related information, such as pointers within linked lists, such that suitable chunks can quickly be found and re-used when needed. The size of chunk is always in multiple of 8, that allows last three bits to be used as flags.
+​	Chunks 是 bins 中的基本分配单元。heap 中的内存根据不同类型的 bins 分成不同大小的 chunks （这个大小取决于它们是由哪个 bin 分配的）。每一个 chunk 都包含有关其大小的元数据（通过chunk头部的size字段）以及相邻块的位置。当 chunk 被释放后，曾经是应用程序数据的内存将重新用于其他与 arena 相关的信息。就如 链表中的指针 ，以便可以在需要时快速找到并重新使用合适的 chunks 。chunks 的大小始终为8的倍数，这允许将最后三位用作标志位。 
 
 
 
-这三种标志分别是：
-
-These three flags are:
+三种标志分别是：
 
 - **A**
 	分配 的Arena - 主 arena 使用应用程序的 heap。其它的 arenas 使用 mmap 分配得到的 heaps 。想要映射一个 chunk 到 heap，你需要了解具体是哪种情况。如果这个 标志值 设置为 0 ，chunk 将来自 main arena 和 main heap。 如果这个 标志值 设置为 1 ，chunk 将是来自 mmap 分配的内存，而 heap 的地址将可以通过 chunk 的地址计算得到。
