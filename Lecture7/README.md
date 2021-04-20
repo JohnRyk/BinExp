@@ -170,23 +170,18 @@ They are the collection of free memory allocation units called `chunks`. There a
 
 这四种类型的bins分别是：
 
- 1. **Fast.**
 
-	有 10 个 fast bins。每一个都维护一个单向链表。增加和删除节点的操作都要从链表头开始（LIFO manner）。每一个 bin 都有相同大小的 chunks 。每10个 bins 就对应 16, 24, 32, 40, 48, 56, 64 个 bytes
-
-	没有两个连续的空闲 chunks 是连在一起的。
+1. **Fast**.
+	有 10 个 fast bins。每一个都维护一个单向链表。增加和删除节点的操作都要从链表头开始（LIFO manner）。每一个 bin 都有相同大小的 chunks 。每10个 bins 就对应 16, 24, 32, 40, 48, 56, 64 个 bytes 没有两个连续的空闲 chunks 是连在一起的。
 
 2. **Unsorted**.
-	当 small 和 large chunks 还空闲的时候，它们被初始存储在这种bin中。只有一个unsorted bins。
-	 When small and large chunks are free'd they're initially stored in a this bin. There is only 1 unsorted bins.
+	当 small 和 large chunks 都还是空闲状态的时候，它们被初始化存储在一个这种类型的 bin 中。只有1 个 unsorted 类型的 bins。
 
 3. **Small**.
-
 	普通的 bins 分为 small bins （其中的每一个chunk的大小都是相同的）和 large bins （其中的chunks的大小在一定范围内）。当一个chunk添加到这个bins的时候，它们首先与相邻的 chunk 组合成 更大的 chunk。因此，执行 chunk 永远不会与其它此类型的 chunk 相邻。（尽管它们可能与 fast 或 unsort chunk或者正在使用中的chunk 相邻 ）small chunk 和 large chunk 被双向链接，以便可以从中间将 chunk 删除。（例如当它们与新的 free chunk 组合时）
 
 4. **Large**.
-	
-	   如果一个 bin 里面有不止一种 size 的 chunk ，则这个 bin 为 large bin。对于 small bin 你可以选择第一个 chunk 并使用它。但对于 large bin 你必须找到最合适的 chunk ,并可能将其拆分成两块（一块是刚好需要的大小，另一块是剩余的大小）
+	如果一个 bin 里面有不止一种 size 的 chunk ，则这个 bin 为 large bin。对于 small bin 你可以选择第一个 chunk 并使用它。但对于 large bin 你必须找到最合适的 chunk ,并可能将其拆分成两块（一块是刚好需要的大小，另一块是剩余的大小）
 	
 
 
