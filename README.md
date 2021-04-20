@@ -40,7 +40,7 @@
     * 在实施“ret2libc”攻击时栈区的组织情况
 
 1. **[Lecture 4.](Lecture4/)**
-    * 这部分包含一些小题目，可以利用我们前面所学的知识玩一玩
+    * 这里包含一些小练习，可以尝试一下
 
 1. **[Lecture 5.](Lecture5/README.md)**
     * 什么是格式化字符串漏洞？
@@ -51,10 +51,10 @@
 1. **[Lecture 6.](Lecture6/README.md)**
     * GOT                               
     * 覆盖GOT入口
-    * 利用格式化字符串漏洞得到shell
+    * 利用格式化字符串漏洞 spwan shell
 
 1. **[Lecture 7.](Lecture7/README.md)**
-    * 堆区
-    * Arena, Bins, Chunks.                      
-    * Use after free exploit.
-    * Double free exploit.
+    * 堆
+    * Arena, Bins, Chunks. 
+    * 释放后使用漏洞利用 Use after free exploit.
+    * 双重释放漏洞利用 Double free exploit.
