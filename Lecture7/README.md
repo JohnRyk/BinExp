@@ -168,11 +168,11 @@ They are the collection of free memory allocation units called `chunks`. There a
 
 
 
-这四种类型的bins分别是：
+这4种类型的 bins 分别是：
 
 
 1. **Fast**.
-	有 10 个 fast bins。每一个都维护一个单向链表。增加和删除节点的操作都要从链表头开始（LIFO manner）。每一个 bin 都有相同大小的 chunks 。每10个 bins 就对应 16, 24, 32, 40, 48, 56, 64 个 bytes 没有两个连续的空闲 chunks 是连在一起的。
+	有 10 个 fast bins。每一个都维护一个单向链表。增加和删除节点的操作都要从链表头开始（LIFO manner）。每一个 bin 都有相同大小的 chunks 。每10个 bins 具有的chunk的大小为： 16, 24, 32, 40, 48, 56, 64 个 bytes ...... 没有两个连续的空闲的 chunks 是连在一起的。
 
 2. **Unsorted**.
 	当 small 和 large chunks 都还是空闲状态的时候，它们被初始化存储在一个这种类型的 bin 中。只有1 个 unsorted 类型的 bins。
