@@ -24,19 +24,9 @@
 
  5. Chunks
 
- 6. 通过一个简单的exploit来看 `fastbins` 是有多好糊弄的。
+ 6. 通过一个简单的案例来看是如何糊弄 `fastbins` 的。
 
 
-
-What I am planning to cover in this lecture:
-
-1. Heap and dynamic memory management functions?
-    * `malloc` & `free` fundamentally.
-2. `sbrk` & `mmap`
-2. Arena
-3. Bins
-4. Chunks
-5. Simple exploit demonstrating how fooling **`fastbins`** are.
 
 
 
@@ -46,7 +36,7 @@ What I am planning to cover in this lecture:
 
 Heap 是内存中的一部分空间。它被用作存储使用 `*alloc` 函数族动态创建的变量。和Stack上的变量不一样，虽然Stack上的变量空间也是在程序代码运行的时候动态创建的，但Stack上的变量空间都是在程序代码中写死的所以不算动态内存分配。
 
-在这个段中创建的内存属性都是 global 的，这意味着程序中的任何 函数/线程 都可以共享这块内存空间。这块内存空间是通过指针处置的。 如果你对指针不熟悉，可以先看看这个 [this guide]() 
+在这个段中创建的内存属性都是 global ，这意味着程序中的任何 函数/线程 都可以共享这块内存空间。这块内存空间是通过指针处置的。 如果你对指针不熟悉，可以先看看这个 [this guide]() 
 
 The memory created in this segment is global, in terms that any function/thread in the program can share that memory. They are handled with pointers. If you are not too handy with pointers, you can refer [this guide]() before going forward.
 
@@ -174,8 +164,6 @@ To understand, the physical heap (allocated to VA) is division-ed into arenas. T
 
 ​	bins 是 空闲内存单元 （chunks）的集合。存在四种不同类型的 bins 用作不同目的，每一种都包含用于跟踪空闲 chunks的分配的数据结构。**没有 arena （基本上是所有在arena中的bins）**不是在跟踪 chunks 的分配的。每个 arena 中，都有特定数量的特定 bin.
 
-
-
 They are the collection of free memory allocation units called `chunks`. There are 4 different types of bins present in one arena specific to requirement. And each bin contains, allocation data structure that keeps track of free chunks. **No arena (basically the bins in the arena) keeps track of allocated chunks**. Each arena have specific count of specific bin in it.
 
 
@@ -222,13 +210,6 @@ They are the collection of free memory allocation units called `chunks`. There a
 
 
 
-- **A**
-    Allocated Arena - the main arena uses the application's heap. Other arenas use mmap'd heaps. To map a chunk to a heap, you need to know which case applies. If this bit is 0, the chunk comes from the main arena and the main heap. If this bit is 1, the chunk comes from mmap'd memory and the location of the heap can be computed from the chunk's address.
-- **M**
-    MMap\'d chunk - this chunk was allocated with a single call to mmap and is not part of a heap at all.
-- **P**
-    Previous chunk is in use - if set, the previous chunk is still being used by the application, and thus the prev_size field is invalid. Note - some chunks, such as those in fastbins (see below) will have this bit set despite being free'd by the application. This bit really means that the previous chunk should not be considered a candidate for coalescing - it's "in use" by either the application or some other optimization layered atop malloc's original code :-)
-
 
 
 
@@ -243,21 +224,13 @@ They are the collection of free memory allocation units called `chunks`. There a
 
 ### 中小型 bins 的分配：
 
-### Allocation of small/medium bins:
-
 
 
 `glibc` 中的 malloc 使用了 first fit 算法来实现在中小型 bins 中 chunks 的分配。顾名思义，在此实现中，内存中第一个空闲的且大小对于分配请求而言足够的位置，会被按请求进行分割，然后分配给请求。
 
 
 
-`glibc` malloc uses first fit algorithm for the allocation of chunks in small/large bins. In this implementation as the name suggest, the first suitable free location of memory which is capable of handling the new request size will split according to the requirement and will be allocated to the new request.
-
-
-
 来看看 `use after free exploit` 会发生什么：
-
-Let see what's going on `use after free exploit`
 
 ```C
 #include <stdio.h>
@@ -296,25 +269,15 @@ int main()
 ```
 ​	执行程序并注意到，指针 `c` 和指针 `a` 指向了同一个位置。无论是 small 还是 large chunks/bins 都存在在释放后被利用的可能。 其中释放的指针即使在释放后依然可以被利用。 
 
-​	Run the program and notice that, the pointer `c` and pointer `a` points to the same location.
-With small and large chunks/bins there is a hope for use after free exploit. In which the pointer which is freed can be exploited even after it is freed.
-
-
-
 
 
 ### Fast bin 的分配：
 
-### Fast bin allocation:
 
 
+​	如前面所介绍过的，fastbins 维护一个 单向链表。这里我指的是 free 的 chunks 。**始终记住，bins的指针只会指向 free chunks** 而不会指向已经被分配的 chunks 。程序员有责任管理好自己申请分配的 chunk ，并在不需要后将其手动释放掉。当一个chunk被释放时，它被添加到 fastbin 链表的头部，并且一个chunk被分配时，头节点 chunk 将被从链表中删除并准备分配。 chunk  如果维护不当，fastbins 可以被利用 执行 双重释放漏洞利用。通常是在程序员错误地释放了两次内存的情况下发生的。攻击者可以用它来执行恶意操作。请看下面代码：
 
-如前面所介绍过的，fastbins 维护一个 单向链表。这里我指的是 free 的 chunks 。**始终记住，bins的指针只会指向 free chunks** 而不会指向已经被分配的 chunks 。程序员有责任管理好自己申请分配的 chunk ，并在不需要后将其手动释放掉。当一个chunk被释放时，它被添加到 fastbin 链表的头部，并且一个chunk被分配时，头节点 chunk 将被从链表中删除并准备分配。 chunk  如果维护不当，fastbins 可以被利用 执行 双重释放漏洞利用。通常是在程序员错误地释放了两次内存的情况下发生的。攻击者可以用它来执行恶意操作。请看下面代码：
 
-As I told earlier that fatsbins are maintained as single linked list. When I mention maintains "fastbins are maintained" then I am talking about, the free chunks. **Always remember bins point to free chunks** only not to the allocated chunks. It is the responsibility of programmmer to take care of allocated chunks and free then when they are not in use.
-When a chunk is freed, it added to the head of the fast bin list and when it is allocated the head node chunk is removed from the list and is up for allocation.
-If not properly maintained fastbins can be exploited to run `double free` exploits. In which programmer by mistake frees a memory twice and the attacker can leverage it to do something malicious.
-Look at the following code.
 
 ```C
 #include <stdio.h>
@@ -341,7 +304,7 @@ int main()
 ```
 这会导致指针 `d` 和 `f` 指向内存中的同一个位置。这叫 双重释放漏洞利用。
 
-This will make pointers `d` and `f` points to same memory location. This is called double free exploit.
+
 
 
 
