@@ -149,7 +149,7 @@ int main(int argc, char** argv)
 
 ​	对于上面这个案例，我们可以通过静态的方式去拿变量 `myvar` 的地址。
 
-`objdump -t ./string1 | grep myvar`
+`objdump -t ./string1 | grep myvar`</br>
 `0804a028 g     O .bss    00000004              myvar`
 
 ​	第一列所对应的就是`myvar`变量的地址。
