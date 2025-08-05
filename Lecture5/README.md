@@ -175,5 +175,16 @@ Cool you changed it .. :)``
 ​	利用格式化字符串漏洞，我们可以exploit程序，实现修改任意地址内存中的值。
 
 
+## Lab WP
+
+编译，关闭PIE
+
+```
+```
+
+通过调试拿到myvar变量在内存中的地址：
+
+<img width="739" height="661" alt="image" src="https://github.com/user-attachments/assets/d4d73178-5569-4f2d-99c7-5aeef7f16148" />
+
 
 
